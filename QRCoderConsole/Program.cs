@@ -1,22 +1,20 @@
 ﻿using System;
-using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using NDesk.Options;
-using System.Reflection;
-using QRCoder;
 using System.Text;
 using System.Windows.Markup;
+using NDesk.Options;
+using QRCoder;
 
 namespace QRCoderConsole
 {
-    class MainClass
+    internal class MainClass
     {
-        public static void Main (string[] args)
+        public static void Main(string[] args)
         {
             var friendlyName = AppDomain.CurrentDomain.FriendlyName;
             var newLine = Environment.NewLine;
-            var setter = new OptionSetter ();
+            var setter = new OptionSetter();
 
             String fileName = null, outputFileName = null, payload = null;
 
@@ -26,7 +24,6 @@ namespace QRCoderConsole
             string foregroundColor = "#000000";
             string backgroundColor = "#FFFFFF";
 
-
             var showHelp = false;
 
             var optionSet = new OptionSet {
@@ -35,7 +32,7 @@ namespace QRCoderConsole
                     value => eccLevel = setter.GetECCLevel(value)
                 },
                 {   "f|output-format=",
-                    "Image format for outputfile. Possible values: png, jpg, gif, bmp, tiff, svg, xaml, ps, eps (default: png)",
+                    "Image format for outputfile. Possible values: png, jpg, gif, bmp, tiff, svg, xaml, ps, eps, ascii (default: png)",
                     value => { Enum.TryParse(value, true, out imageFormat); }
                 },
                 {
@@ -81,12 +78,10 @@ namespace QRCoderConsole
                     "show this message and exit.",
                     value => showHelp = value != null
                 }
-
             };
 
             try
             {
-
                 optionSet.Parse(args);
 
                 if (showHelp)
@@ -153,6 +148,7 @@ namespace QRCoderConsole
                                 }
                             }
                             break;
+
                         case SupportedImageFormat.Svg:
                             using (var code = new SvgQRCode(data))
                             {
@@ -164,6 +160,7 @@ namespace QRCoderConsole
                                 }
                             }
                             break;
+
                         case SupportedImageFormat.Xaml:
                             using (var code = new XamlQRCode(data))
                             {
@@ -175,6 +172,7 @@ namespace QRCoderConsole
                                 }
                             }
                             break;
+
                         case SupportedImageFormat.Ps:
                         case SupportedImageFormat.Eps:
                             using (var code = new PostscriptQRCode(data))
@@ -188,10 +186,19 @@ namespace QRCoderConsole
                                 }
                             }
                             break;
+
+                        case SupportedImageFormat.Ascii:
+                            using (var code = new AsciiQRCode(data))
+                            {
+                                var test = code.GetGraphic(1);
+                                var bytes = Encoding.GetEncoding(866).GetBytes(test);
+                                File.WriteAllBytes(outputFileName, bytes);
+                            }
+                            break;
+
                         default:
                             throw new ArgumentOutOfRangeException(nameof(imgFormat), imgFormat, null);
                     }
-
                 }
             }
         }
@@ -252,14 +259,19 @@ namespace QRCoderConsole
             {
                 case "jpg":
                     return ImageFormat.Jpeg;
+
                 case "jpeg":
                     return ImageFormat.Jpeg;
+
                 case "gif":
                     return ImageFormat.Gif;
+
                 case "bmp":
                     return ImageFormat.Bmp;
+
                 case "tiff":
                     return ImageFormat.Tiff;
+
                 case "png":
                 default:
                     return ImageFormat.Png;
@@ -267,4 +279,3 @@ namespace QRCoderConsole
         }
     }
 }
-
